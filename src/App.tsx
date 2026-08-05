@@ -4,7 +4,6 @@ import { startQuiz, submitQuiz } from './api/quizApi'
 import CategorySelect from './components/CategorySelect'
 import QuestionCard from './components/QuestionCard'
 import ResultsSummary from './components/ResultsSummary'
-import './App.css'
 
 type QuizStage = 'setup' | 'playing' | 'submitting' | 'results'
 
