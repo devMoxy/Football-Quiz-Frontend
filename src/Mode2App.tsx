@@ -1,0 +1,96 @@
+import { useState } from 'react'
+import type {
+  CareerPathAnswerDTO,
+  CareerPathQuestionDTO,
+  CareerPathQuizResultDTO,
+  Difficulty,
+} from './types/quiz'
+import { startCareerPath, submitCareerPath } from './api/quizApi'
+import CareerPathSelect from './components/CareerPathSelect'
+import CareerPathQuestion from './components/CareerPathQuestion'
+import CareerPathResults from './components/CareerPathResults'
+
+type QuizStage = 'setup' | 'playing' | 'submitting' | 'results'
+
+function Mode2App() {
+  const [stage, setStage] = useState<QuizStage>('setup')
+  const [questions, setQuestions] = useState<CareerPathQuestionDTO[]>([])
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [answers, setAnswers] = useState<CareerPathAnswerDTO[]>([])
+  const [results, setResults] = useState<CareerPathQuizResultDTO | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  const handleStart = (difficulty: Difficulty, numberOfQuestions: number) => {
+    setError(null)
+    setLoading(true)
+    startCareerPath({ difficulty, numberOfQuestions })
+      .then((data) => {
+        setQuestions(data)
+        setCurrentIndex(0)
+        setAnswers([])
+        setStage('playing')
+      })
+      .catch((err: Error) => setError(err.message))
+      .finally(() => setLoading(false))
+  }
+
+  const handleAnswer = (selectedAnswerIndex: number) => {
+    const question = questions[currentIndex]
+    const nextAnswers = [
+      ...answers.filter((a) => a.questionId !== question.id),
+      { questionId: question.id, selectedAnswerIndex },
+    ]
+    setAnswers(nextAnswers)
+
+    if (currentIndex + 1 < questions.length) {
+      setCurrentIndex(currentIndex + 1)
+      return
+    }
+
+    setStage('submitting')
+    submitCareerPath({ answers: nextAnswers })
+      .then((data) => {
+        setResults(data)
+        setStage('results')
+      })
+      .catch((err: Error) => {
+        setError(err.message)
+        setStage('playing')
+      })
+  }
+
+  const handleRestart = () => {
+    setStage('setup')
+    setQuestions([])
+    setCurrentIndex(0)
+    setAnswers([])
+    setResults(null)
+    setError(null)
+  }
+
+  return (
+    <section>
+      {stage === 'setup' && (
+        <CareerPathSelect onStart={handleStart} loading={loading} error={error} />
+      )}
+
+      {stage === 'playing' && questions.length > 0 && (
+        <CareerPathQuestion
+          question={questions[currentIndex]}
+          questionNumber={currentIndex + 1}
+          totalQuestions={questions.length}
+          onAnswer={handleAnswer}
+        />
+      )}
+
+      {stage === 'submitting' && <p>Submitting…</p>}
+
+      {stage === 'results' && results && (
+        <CareerPathResults results={results} questions={questions} onRestart={handleRestart} />
+      )}
+    </section>
+  )
+}
+
+export default Mode2App

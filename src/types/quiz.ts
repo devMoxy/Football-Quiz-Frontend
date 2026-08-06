@@ -45,3 +45,49 @@ export interface QuizSubmitResponse {
   totalQuestions: number
   results: QuestionResultDTO[]
 }
+
+export interface ClubStintDTO {
+  clubName: string
+  logoUrl: string
+  clubOrder: number
+}
+
+export interface CareerPathQuestionDTO {
+  id: number
+  optionA: string
+  optionB: string
+  optionC: string
+  optionD: string
+  difficulty: Difficulty
+  clubStints: ClubStintDTO[]
+}
+
+export type CareerPathStartResponse = CareerPathQuestionDTO[]
+
+export interface StartCareerPathParams {
+  difficulty: Difficulty
+  numberOfQuestions: number
+}
+
+export interface CareerPathAnswerDTO {
+  questionId: number
+  selectedAnswerIndex: number
+}
+
+export interface CareerPathSubmitRequest {
+  answers: CareerPathAnswerDTO[]
+}
+
+export interface CareerPathResultDTO {
+  questionId: number
+  selectedAnswerIndex: number
+  correctAnswerIndex: number
+  correctPlayerName: string
+  correct: boolean
+}
+
+export interface CareerPathQuizResultDTO {
+  score: number
+  totalQuestions: number
+  results: CareerPathResultDTO[]
+}

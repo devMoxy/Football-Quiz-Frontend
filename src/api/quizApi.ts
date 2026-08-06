@@ -1,8 +1,12 @@
 import type {
+  CareerPathQuizResultDTO,
+  CareerPathStartResponse,
+  CareerPathSubmitRequest,
   CategoryDTO,
   QuizStartResponse,
   QuizSubmitRequest,
   QuizSubmitResponse,
+  StartCareerPathParams,
   StartQuizParams,
 } from '../types/quiz'
 
@@ -37,4 +41,23 @@ export function submitQuiz(payload: QuizSubmitRequest): Promise<QuizSubmitRespon
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   }).then((res) => handleResponse<QuizSubmitResponse>(res))
+}
+
+export function startCareerPath(params: StartCareerPathParams): Promise<CareerPathStartResponse> {
+  const query = new URLSearchParams({
+    difficulty: params.difficulty,
+    numberOfQuestions: String(params.numberOfQuestions),
+  })
+
+  return fetch(`${API_URL}/api/career-path/start?${query.toString()}`, {
+    method: 'POST',
+  }).then((res) => handleResponse<CareerPathStartResponse>(res))
+}
+
+export function submitCareerPath(payload: CareerPathSubmitRequest): Promise<CareerPathQuizResultDTO> {
+  return fetch(`${API_URL}/api/career-path/submit`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  }).then((res) => handleResponse<CareerPathQuizResultDTO>(res))
 }
