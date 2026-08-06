@@ -1,0 +1,222 @@
+import { useEffect, useRef, useState } from 'react'
+import type { AchievementMatchStartResponse, PlayerDTO } from './types/quiz'
+import { guessAchievementMatch, startAchievementMatch } from './api/quizApi'
+import GridSizeSelect from './components/GridSizeSelect'
+import AchievementGrid from './components/AchievementGrid'
+import ActivePlayerCard from './components/ActivePlayerCard'
+
+type RoundStage = 'setup' | 'playing' | 'complete'
+
+const STARTING_TIME_SECONDS = 20
+const WRONG_GUESS_PENALTY_SECONDS = 2
+const TIME_FLOOR_SECONDS = 6
+
+function Mode3App() {
+  const [stage, setStage] = useState<RoundStage>('setup')
+  const [round, setRound] = useState<AchievementMatchStartResponse | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  const [primaryIndex, setPrimaryIndex] = useState(0)
+  const [playersShownCount, setPlayersShownCount] = useState(1)
+  const [activePlayer, setActivePlayer] = useState<PlayerDTO | null>(null)
+  const [triggeringAchievementId, setTriggeringAchievementId] = useState<number | null>(null)
+
+  const [tickedAchievementIds, setTickedAchievementIds] = useState<Set<number>>(new Set())
+  const [lockedAchievementIds, setLockedAchievementIds] = useState<Set<number>>(new Set())
+  const [guessPending, setGuessPending] = useState(false)
+
+  const [timeLeft, setTimeLeft] = useState(STARTING_TIME_SECONDS)
+  const timeLeftRef = useRef(STARTING_TIME_SECONDS)
+  const stageRef = useRef<RoundStage>('setup')
+
+  useEffect(() => {
+    timeLeftRef.current = timeLeft
+  }, [timeLeft])
+
+  useEffect(() => {
+    stageRef.current = stage
+  }, [stage])
+
+  // Reset the countdown every time a new player (primary or backup) is shown.
+  useEffect(() => {
+    if (stage !== 'playing') return
+    setTimeLeft(STARTING_TIME_SECONDS)
+  }, [playersShownCount, stage])
+
+  // Tick once per second while playing. Functional update keeps this immune
+  // to stale closures regardless of how long the effect has been running.
+  useEffect(() => {
+    if (stage !== 'playing') return
+    const id = setInterval(() => {
+      setTimeLeft((prev) => Math.max(prev - 1, 0))
+    }, 1000)
+    return () => clearInterval(id)
+  }, [stage])
+
+  // Natural depletion ends the round — runs all the way to 0, unlike the
+  // penalty floor below which only applies to wrong-guess subtraction.
+  useEffect(() => {
+    if (stage === 'playing' && timeLeft <= 0) {
+      setStage('complete')
+    }
+  }, [timeLeft, stage])
+
+  const handleStart = (gridSize: number) => {
+    setError(null)
+    setLoading(true)
+    startAchievementMatch(gridSize)
+      .then((data) => {
+        setRound(data)
+        setPrimaryIndex(0)
+        setPlayersShownCount(1)
+        setActivePlayer(data.players[0] ?? null)
+        setTriggeringAchievementId(null)
+        setTickedAchievementIds(new Set())
+        setLockedAchievementIds(new Set())
+        setStage('playing')
+      })
+      .catch((err: Error) => setError(err.message))
+      .finally(() => setLoading(false))
+  }
+
+  const advanceToNextPrimary = () => {
+    setTriggeringAchievementId(null)
+    if (!round) return
+
+    const nextIndex = primaryIndex + 1
+    if (nextIndex >= round.players.length) {
+      setStage('complete')
+      return
+    }
+
+    setPrimaryIndex(nextIndex)
+    setActivePlayer(round.players[nextIndex])
+    setPlayersShownCount((count) => count + 1)
+  }
+
+  const handlePrimaryTurnResult = (achievementId: number, correct: boolean) => {
+    if (correct) {
+      setTickedAchievementIds((prev) => new Set(prev).add(achievementId))
+      advanceToNextPrimary()
+      return
+    }
+
+    const backup = round?.backupPools[String(achievementId)]
+
+    if (backup) {
+      setActivePlayer(backup)
+      setTriggeringAchievementId(achievementId)
+      setPlayersShownCount((count) => count + 1)
+    } else {
+      setLockedAchievementIds((prev) => new Set(prev).add(achievementId))
+      advanceToNextPrimary()
+    }
+  }
+
+  const handleBackupTurnResult = (achievementId: number, correct: boolean) => {
+    const nextTicked = new Set(tickedAchievementIds)
+    const nextLocked = new Set(lockedAchievementIds)
+
+    if (correct) {
+      nextTicked.add(achievementId)
+    } else if (achievementId === triggeringAchievementId) {
+      nextLocked.add(achievementId)
+    }
+
+    if (
+      triggeringAchievementId !== null &&
+      !nextTicked.has(triggeringAchievementId) &&
+      !nextLocked.has(triggeringAchievementId)
+    ) {
+      nextLocked.add(triggeringAchievementId)
+    }
+
+    setTickedAchievementIds(nextTicked)
+    setLockedAchievementIds(nextLocked)
+    advanceToNextPrimary()
+  }
+
+  // Returns true if the penalty pushed the timer past the floor and ended the round.
+  const applyWrongGuessPenalty = (): boolean => {
+    const next = timeLeftRef.current - WRONG_GUESS_PENALTY_SECONDS
+    setTimeLeft(next)
+    if (next < TIME_FLOOR_SECONDS) {
+      setStage('complete')
+      return true
+    }
+    return false
+  }
+
+  const handleBoxClick = (achievementId: number) => {
+    if (!activePlayer || guessPending) return
+    if (tickedAchievementIds.has(achievementId) || lockedAchievementIds.has(achievementId)) return
+
+    setGuessPending(true)
+    guessAchievementMatch(activePlayer.playerId, achievementId)
+      .then((res) => {
+        if (stageRef.current !== 'playing') return
+
+        if (!res.correct) {
+          const ended = applyWrongGuessPenalty()
+          if (ended) return
+        }
+
+        if (triggeringAchievementId === null) {
+          handlePrimaryTurnResult(achievementId, res.correct)
+        } else {
+          handleBackupTurnResult(achievementId, res.correct)
+        }
+      })
+      .catch((err: Error) => setError(err.message))
+      .finally(() => setGuessPending(false))
+  }
+
+  const handleRestart = () => {
+    setStage('setup')
+    setRound(null)
+    setError(null)
+    setActivePlayer(null)
+  }
+
+  return (
+    <section>
+      {stage === 'setup' && (
+        <GridSizeSelect onStart={handleStart} loading={loading} error={error} />
+      )}
+
+      {stage === 'playing' && round && activePlayer && (
+        <>
+          <p>Time left: {timeLeft}s</p>
+          <ActivePlayerCard
+            player={activePlayer}
+            playersShownCount={playersShownCount}
+            totalPlayers={round.totalPlayers}
+          />
+          {error && <p role="alert">{error}</p>}
+          <AchievementGrid
+            achievements={round.achievements}
+            gridSize={round.gridSize}
+            tickedAchievementIds={tickedAchievementIds}
+            lockedAchievementIds={lockedAchievementIds}
+            onBoxClick={handleBoxClick}
+            disabled={guessPending}
+          />
+        </>
+      )}
+
+      {stage === 'complete' && round && (
+        <div>
+          <h1>
+            Round complete — Score: {tickedAchievementIds.size} / {round.gridSize * round.gridSize}
+          </h1>
+          <button type="button" onClick={handleRestart}>
+            Play Again
+          </button>
+        </div>
+      )}
+    </section>
+  )
+}
+
+export default Mode3App

@@ -91,3 +91,44 @@ export interface CareerPathQuizResultDTO {
   totalQuestions: number
   results: CareerPathResultDTO[]
 }
+
+export interface AchievementDTO {
+  achievementId: number
+  description: string
+  imageUrl: string
+}
+
+export interface PlayerDTO {
+  playerId: number
+  name: string
+  imageUrl: string
+}
+
+export interface AchievementMatchStartResponse {
+  gridSize: number
+  totalPlayers: number
+  achievements: AchievementDTO[]
+  players: PlayerDTO[]
+  backupPools: Record<string, PlayerDTO>
+}
+
+export interface GuessRequest {
+  playerId: number
+  achievementId: number
+}
+
+export interface GuessResponse {
+  playerId: number
+  achievementId: number
+  correct: boolean
+}
+
+export interface LifelineRequest {
+  playerId: number
+  boardAchievementIds: number[]
+}
+
+export interface LifelineResponse {
+  playerId: number
+  matchedAchievementIds: number[]
+}

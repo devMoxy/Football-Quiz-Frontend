@@ -1,8 +1,13 @@
 import type {
+  AchievementMatchStartResponse,
   CareerPathQuizResultDTO,
   CareerPathStartResponse,
   CareerPathSubmitRequest,
   CategoryDTO,
+  GuessRequest,
+  GuessResponse,
+  LifelineRequest,
+  LifelineResponse,
   QuizStartResponse,
   QuizSubmitRequest,
   QuizSubmitResponse,
@@ -60,4 +65,35 @@ export function submitCareerPath(payload: CareerPathSubmitRequest): Promise<Care
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   }).then((res) => handleResponse<CareerPathQuizResultDTO>(res))
+}
+
+export function startAchievementMatch(gridSize: number): Promise<AchievementMatchStartResponse> {
+  const query = new URLSearchParams({ gridSize: String(gridSize) })
+
+  return fetch(`${API_URL}/api/achievement-match/start?${query.toString()}`, {
+    method: 'POST',
+  }).then((res) => handleResponse<AchievementMatchStartResponse>(res))
+}
+
+export function guessAchievementMatch(playerId: number, achievementId: number): Promise<GuessResponse> {
+  const payload: GuessRequest = { playerId, achievementId }
+
+  return fetch(`${API_URL}/api/achievement-match/guess`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  }).then((res) => handleResponse<GuessResponse>(res))
+}
+
+export function lifelineAchievementMatch(
+  playerId: number,
+  boardAchievementIds: number[],
+): Promise<LifelineResponse> {
+  const payload: LifelineRequest = { playerId, boardAchievementIds }
+
+  return fetch(`${API_URL}/api/achievement-match/lifeline`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  }).then((res) => handleResponse<LifelineResponse>(res))
 }
