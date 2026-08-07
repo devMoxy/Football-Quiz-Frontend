@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { AchievementMatchStartResponse, PlayerDTO } from './types/quiz'
-import { guessAchievementMatch, startAchievementMatch } from './api/quizApi'
+import { guessAchievementMatch, lifelineAchievementMatch, startAchievementMatch } from './api/quizApi'
 import GridSizeSelect from './components/GridSizeSelect'
 import AchievementGrid from './components/AchievementGrid'
 import ActivePlayerCard from './components/ActivePlayerCard'
@@ -25,6 +25,7 @@ function Mode3App() {
   const [tickedAchievementIds, setTickedAchievementIds] = useState<Set<number>>(new Set())
   const [lockedAchievementIds, setLockedAchievementIds] = useState<Set<number>>(new Set())
   const [guessPending, setGuessPending] = useState(false)
+  const [lifelineUsed, setLifelineUsed] = useState(false)
 
   const [timeLeft, setTimeLeft] = useState(STARTING_TIME_SECONDS)
   const timeLeftRef = useRef(STARTING_TIME_SECONDS)
@@ -76,6 +77,19 @@ function Mode3App() {
     }
   }, [timeLeft, stage])
 
+  // Derives activePlayer / round-complete from the settled primaryIndex
+  // rather than a value threaded through advanceToNextPrimary's closure —
+  // correct even when advanceToNextPrimary is called several times
+  // synchronously (e.g. a rapid Skip double-click) before React re-renders.
+  useEffect(() => {
+    if (stage !== 'playing' || !round) return
+    if (primaryIndex >= round.players.length) {
+      setStage('complete')
+      return
+    }
+    setActivePlayer(round.players[primaryIndex])
+  }, [primaryIndex, round, stage])
+
   const handleStart = (gridSize: number) => {
     setError(null)
     setLoading(true)
@@ -91,6 +105,7 @@ function Mode3App() {
         setBaseTime(STARTING_TIME_SECONDS)
         window.clearTimeout(penaltyFlashTimeoutRef.current)
         setPenaltyFlash(null)
+        setLifelineUsed(false)
         setStage('playing')
       })
       .catch((err: Error) => setError(err.message))
@@ -100,15 +115,7 @@ function Mode3App() {
   const advanceToNextPrimary = () => {
     setTriggeringAchievementId(null)
     if (!round) return
-
-    const nextIndex = primaryIndex + 1
-    if (nextIndex >= round.players.length) {
-      setStage('complete')
-      return
-    }
-
-    setPrimaryIndex(nextIndex)
-    setActivePlayer(round.players[nextIndex])
+    setPrimaryIndex((prev) => prev + 1)
     setPlayersShownCount((count) => count + 1)
   }
 
@@ -189,6 +196,45 @@ function Mode3App() {
       .finally(() => setGuessPending(false))
   }
 
+  // Permanently passes on the current player with no penalty and no API call.
+  // If a backup turn is skipped, the triggering achievement's one retry is
+  // gone for good — force-lock it via the same orphan-fix pattern used in
+  // handleBackupTurnResult, so its (now-departed) backup can't be re-shown
+  // by a later, unrelated wrong guess against the same box.
+  const handleSkip = () => {
+    if (guessPending) return
+    if (triggeringAchievementId !== null) {
+      setLockedAchievementIds((prev) => new Set(prev).add(triggeringAchievementId))
+    }
+    advanceToNextPrimary()
+  }
+
+  const handleLifeline = () => {
+    if (!activePlayer || guessPending || lifelineUsed) return
+    const boardAchievementIds = round?.achievements.map((a) => a.achievementId) ?? []
+
+    setGuessPending(true)
+    lifelineAchievementMatch(activePlayer.playerId, boardAchievementIds)
+      .then((res) => {
+        if (stageRef.current !== 'playing') return
+        setLifelineUsed(true)
+
+        const matchedId = res.matchedAchievementIds[0]
+        if (matchedId === undefined) {
+          advanceToNextPrimary()
+          return
+        }
+
+        if (triggeringAchievementId === null) {
+          handlePrimaryTurnResult(matchedId, true)
+        } else {
+          handleBackupTurnResult(matchedId, true)
+        }
+      })
+      .catch((err: Error) => setError(err.message))
+      .finally(() => setGuessPending(false))
+  }
+
   const handleRestart = () => {
     window.clearTimeout(penaltyFlashTimeoutRef.current)
     setPenaltyFlash(null)
@@ -219,6 +265,12 @@ function Mode3App() {
             playersShownCount={playersShownCount}
             totalPlayers={round.totalPlayers}
           />
+          <button type="button" onClick={handleSkip} disabled={guessPending}>
+            Skip
+          </button>
+          <button type="button" onClick={handleLifeline} disabled={guessPending || lifelineUsed}>
+            Lifeline
+          </button>
           {error && <p role="alert">{error}</p>}
           <AchievementGrid
             achievements={round.achievements}
