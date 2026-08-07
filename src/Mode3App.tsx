@@ -30,6 +30,15 @@ function Mode3App() {
   const timeLeftRef = useRef(STARTING_TIME_SECONDS)
   const stageRef = useRef<RoundStage>('setup')
 
+  // The countdown allowance carried into each new player's turn. Degrades on
+  // wrong guesses (floored at TIME_FLOOR_SECONDS) and persists across correct
+  // guesses — it only resets on a fresh round.
+  const [baseTime, setBaseTime] = useState(STARTING_TIME_SECONDS)
+  const baseTimeRef = useRef(STARTING_TIME_SECONDS)
+
+  const [penaltyFlash, setPenaltyFlash] = useState<number | null>(null)
+  const penaltyFlashTimeoutRef = useRef<number | undefined>(undefined)
+
   useEffect(() => {
     timeLeftRef.current = timeLeft
   }, [timeLeft])
@@ -38,11 +47,16 @@ function Mode3App() {
     stageRef.current = stage
   }, [stage])
 
-  // Reset the countdown every time a new player (primary or backup) is shown.
+  useEffect(() => {
+    baseTimeRef.current = baseTime
+  }, [baseTime])
+
+  // Reset the countdown every time a new player (primary or backup) is shown,
+  // starting them at the current (possibly degraded) baseTime.
   useEffect(() => {
     if (stage !== 'playing') return
-    setTimeLeft(STARTING_TIME_SECONDS)
-  }, [playersShownCount, stage])
+    setTimeLeft(baseTime)
+  }, [playersShownCount, stage, baseTime])
 
   // Tick once per second while playing. Functional update keeps this immune
   // to stale closures regardless of how long the effect has been running.
@@ -74,6 +88,9 @@ function Mode3App() {
         setTriggeringAchievementId(null)
         setTickedAchievementIds(new Set())
         setLockedAchievementIds(new Set())
+        setBaseTime(STARTING_TIME_SECONDS)
+        window.clearTimeout(penaltyFlashTimeoutRef.current)
+        setPenaltyFlash(null)
         setStage('playing')
       })
       .catch((err: Error) => setError(err.message))
@@ -137,15 +154,16 @@ function Mode3App() {
     advanceToNextPrimary()
   }
 
-  // Returns true if the penalty pushed the timer past the floor and ended the round.
-  const applyWrongGuessPenalty = (): boolean => {
-    const next = timeLeftRef.current - WRONG_GUESS_PENALTY_SECONDS
-    setTimeLeft(next)
-    if (next < TIME_FLOOR_SECONDS) {
-      setStage('complete')
-      return true
-    }
-    return false
+  // Wrong guesses degrade the shared baseTime (floored) and flash a cosmetic
+  // penalty indicator — they no longer end the round by themselves.
+  const applyWrongGuessPenalty = () => {
+    const next = Math.max(baseTimeRef.current - WRONG_GUESS_PENALTY_SECONDS, TIME_FLOOR_SECONDS)
+    setBaseTime(next)
+
+    window.clearTimeout(penaltyFlashTimeoutRef.current)
+    const flashId = Date.now()
+    setPenaltyFlash(flashId)
+    penaltyFlashTimeoutRef.current = window.setTimeout(() => setPenaltyFlash(null), 700)
   }
 
   const handleBoxClick = (achievementId: number) => {
@@ -158,8 +176,7 @@ function Mode3App() {
         if (stageRef.current !== 'playing') return
 
         if (!res.correct) {
-          const ended = applyWrongGuessPenalty()
-          if (ended) return
+          applyWrongGuessPenalty()
         }
 
         if (triggeringAchievementId === null) {
@@ -173,6 +190,8 @@ function Mode3App() {
   }
 
   const handleRestart = () => {
+    window.clearTimeout(penaltyFlashTimeoutRef.current)
+    setPenaltyFlash(null)
     setStage('setup')
     setRound(null)
     setError(null)
@@ -187,7 +206,14 @@ function Mode3App() {
 
       {stage === 'playing' && round && activePlayer && (
         <>
-          <p>Time left: {timeLeft}s</p>
+          <p className="timer-row">
+            Time left: {timeLeft}s
+            {penaltyFlash !== null && (
+              <span key={penaltyFlash} className="penalty-flash" aria-live="polite">
+                -2s!
+              </span>
+            )}
+          </p>
           <ActivePlayerCard
             player={activePlayer}
             playersShownCount={playersShownCount}
