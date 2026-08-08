@@ -1,4 +1,5 @@
 import type { QuestionDTO, QuizSubmitResponse } from '../types/quiz'
+import './ResultsSummary.css'
 
 interface ResultsSummaryProps {
   results: QuizSubmitResponse
@@ -13,34 +14,58 @@ function ResultsSummary({ results, questions, onRestart }: ResultsSummaryProps) 
   }
 
   return (
-    <div>
-      <h1>
-        Score: {results.score} / {results.totalQuestions}
-      </h1>
+    <div className="results">
+      <div className="results__panel">
+        <p className="results__kicker">Full Time</p>
+        <p className="results__score">
+          {results.score} / {results.totalQuestions}
+        </p>
 
-      <ul style={{ listStyle: 'none', padding: 0 }}>
-        {results.results.map((result) => {
-          const question = questions.find((q) => q.id === result.questionId)
-          if (!question) return null
+        <ul className="results__list">
+          {results.results.map((result) => {
+            const question = questions.find((q) => q.id === result.questionId)
+            if (!question) return null
 
-          return (
-            <li key={result.questionId}>
-              <p>{question.text}</p>
-              <p>
-                Your answer: {optionLabel(question, result.selectedAnswerIndex)}{' '}
-                {result.correct ? '✅' : '❌'}
-              </p>
-              {!result.correct && (
-                <p>Correct answer: {optionLabel(question, result.correctAnswerIndex)}</p>
-              )}
-            </li>
-          )
-        })}
-      </ul>
+            return (
+              <li
+                key={result.questionId}
+                className={`results__item ${
+                  result.correct ? 'results__item--correct' : 'results__item--incorrect'
+                }`}
+              >
+                <span className="results__item-icon" aria-hidden="true">
+                  {result.correct ? '✓' : '✕'}
+                </span>
+                <div className="results__item-body">
+                  <p className="results__item-question">{question.text}</p>
+                  <p className="results__item-answer">
+                    Your answer:{' '}
+                    <span
+                      className={`results__item-value ${
+                        result.correct ? 'results__item-value--correct' : 'results__item-value--incorrect'
+                      }`}
+                    >
+                      {optionLabel(question, result.selectedAnswerIndex)}
+                    </span>
+                  </p>
+                  {!result.correct && (
+                    <p className="results__item-answer">
+                      Correct answer:{' '}
+                      <span className="results__item-value results__item-value--correct">
+                        {optionLabel(question, result.correctAnswerIndex)}
+                      </span>
+                    </p>
+                  )}
+                </div>
+              </li>
+            )
+          })}
+        </ul>
 
-      <button type="button" onClick={onRestart}>
-        Play Again
-      </button>
+        <button type="button" className="results__restart" onClick={onRestart}>
+          Play Again
+        </button>
+      </div>
     </div>
   )
 }

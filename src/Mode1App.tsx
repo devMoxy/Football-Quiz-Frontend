@@ -79,7 +79,11 @@ function Mode1App() {
         />
       )}
 
-      {stage === 'submitting' && <p>Submitting…</p>}
+      {stage === 'submitting' && (
+        <div className="quiz-loading">
+          <p className="quiz-loading__text">Submitting…</p>
+        </div>
+      )}
 
       {stage === 'results' && results && (
         <ResultsSummary results={results} questions={questions} onRestart={handleRestart} />

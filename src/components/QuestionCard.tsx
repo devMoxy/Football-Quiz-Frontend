@@ -1,4 +1,5 @@
 import type { QuestionDTO } from '../types/quiz'
+import './QuestionCard.css'
 
 interface QuestionCardProps {
   question: QuestionDTO
@@ -9,22 +10,36 @@ interface QuestionCardProps {
 
 function QuestionCard({ question, questionNumber, totalQuestions, onAnswer }: QuestionCardProps) {
   const options = [question.optionA, question.optionB, question.optionC, question.optionD]
+  const progressPercent = (questionNumber / totalQuestions) * 100
 
   return (
-    <div>
-      <p>
-        Question {questionNumber} of {totalQuestions}
-      </p>
-      <h2>{question.text}</h2>
-      <ul style={{ listStyle: 'none', padding: 0 }}>
-        {options.map((option, index) => (
-          <li key={index}>
-            <button type="button" onClick={() => onAnswer(index)}>
-              {option}
+    <div className="question">
+      <div className="question__panel">
+        <div className="question__progress">
+          <div className="question__progress-bar">
+            <div className="question__progress-fill" style={{ width: `${progressPercent}%` }} />
+          </div>
+          <span className="question__counter">
+            Q{questionNumber} / {totalQuestions}
+          </span>
+        </div>
+
+        <h2 className="question__text">{question.text}</h2>
+
+        <div className="question__options">
+          {options.map((option, index) => (
+            <button
+              key={index}
+              type="button"
+              className="question__option"
+              onClick={() => onAnswer(index)}
+            >
+              <span className="question__option-letter">{String.fromCharCode(65 + index)}</span>
+              <span className="question__option-label">{option}</span>
             </button>
-          </li>
-        ))}
-      </ul>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }

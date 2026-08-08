@@ -24,6 +24,13 @@
   --card-amber: #ffc107;
   --card-red: #e63946;
   --ink: #0b1f17;
+  /* No success color is defined in the design system; derived from
+     --pitch-mid's hue/saturation (153°, 42%) at a lightness raised
+     for legibility on dark surfaces, rather than introducing an
+     unrelated new hue for "correct" states. Mixing straight to white
+     via color-mix() desaturated to near-gray, so this is expressed
+     directly as hsl() instead. */
+  --success: hsl(153, 42%, 58%);
 
   --font-display: 'Oswald', 'Segoe UI', sans-serif;
   --font-body: 'Inter', system-ui, sans-serif;
@@ -72,6 +79,7 @@
 
 body {
   margin: 0;
+  background: var(--pitch-dark);
 }
 
 h1,
@@ -103,26 +111,49 @@ p {
   margin: 0;
 }
 
+.quiz-loading {
+  min-height: 100svh;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--pitch-dark);
+}
+
+.quiz-loading__text {
+  font-family: var(--font-display);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 20px;
+  color: var(--chalk);
+}
+
 .back-to-lineup {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   margin: 16px 0 0 16px;
   padding: 6px 14px;
-  background: transparent;
-  border: 1px solid var(--border);
+  background: var(--pitch-dark);
+  border: 1px solid rgba(245, 245, 240, 0.22);
   border-radius: 999px;
-  font-family: var(--sans);
+  font-family: var(--font-body);
   font-size: 13px;
-  color: var(--text);
+  color: var(--chalk);
   cursor: pointer;
-  transition: color 0.2s ease, border-color 0.2s ease;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease;
 }
 
 .back-to-lineup:hover,
 .back-to-lineup:focus-visible {
   color: var(--card-amber);
   border-color: var(--card-amber);
+  background: var(--pitch-mid);
   outline: none;
 }
 

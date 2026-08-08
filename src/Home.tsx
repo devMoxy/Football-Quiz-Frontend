@@ -51,8 +51,8 @@ function Home({ onSelectMode }: HomeProps) {
       <PitchMarkings />
 
       <header className="home__header">
-        <p className="home__kicker">Matchday</p>
-        <h1 className="home__title">Pick Your Lineup</h1>
+        <p className="home__kicker">Pick Your Lineup</p>
+        <h1 className="home__title">Moxy Football Quiz</h1>
         <p className="home__subtitle">Three ways to test your football knowledge.</p>
       </header>
 
