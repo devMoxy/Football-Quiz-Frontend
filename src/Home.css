@@ -1,0 +1,196 @@
+.home {
+  position: relative;
+  min-height: 100svh;
+  width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+  background: var(--pitch-dark);
+  color: var(--chalk);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 56px 24px 72px;
+}
+
+/* Mowed-grass stripe texture, sitting behind the pitch linework. */
+.home::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    100deg,
+    var(--pitch-dark) 0px,
+    var(--pitch-dark) 90px,
+    var(--pitch-mid) 90px,
+    var(--pitch-mid) 180px
+  );
+  opacity: 0.4;
+  z-index: 0;
+}
+
+.pitch-lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  color: var(--chalk);
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+  opacity: 0.16;
+  z-index: 0;
+}
+
+.home__header {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  margin-bottom: 56px;
+}
+
+.home__kicker {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  font-size: 13px;
+  color: var(--card-amber);
+  margin: 0 0 10px;
+}
+
+.home__title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: clamp(36px, 7vw, 72px);
+  letter-spacing: 1px;
+  line-height: 1.05;
+  margin: 0 0 14px;
+  color: var(--chalk);
+}
+
+.home__subtitle {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 16px;
+  color: rgba(245, 245, 240, 0.72);
+  margin: 0;
+}
+
+.home__lineup {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 32px;
+  width: 100%;
+  max-width: 1080px;
+}
+
+/* Front-three formation: center card most advanced (least margin-top),
+   the two wide cards dropped back and unevenly staggered for an organic
+   lineup feel rather than a symmetric wedge. */
+@media (min-width: 860px) {
+  .player-card--mode1 {
+    margin-top: 56px;
+  }
+  .player-card--mode2 {
+    margin-top: 0;
+  }
+  .player-card--mode3 {
+    margin-top: 88px;
+  }
+}
+
+.player-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 220px;
+  max-width: 100%;
+  background: rgba(11, 31, 23, 0.55);
+  border: 1px solid rgba(245, 245, 240, 0.14);
+  border-radius: 10px;
+  padding: 18px 16px 22px;
+  font: inherit;
+  color: inherit;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+
+/* Floodlight hover: amber glow + lift, like a player picked out under lights. */
+.player-card:hover,
+.player-card:focus-visible {
+  transform: translateY(-10px);
+  border-color: var(--card-amber);
+  box-shadow:
+    0 0 0 1px rgba(255, 193, 7, 0.4),
+    0 20px 40px -14px rgba(255, 193, 7, 0.5),
+    0 0 32px rgba(255, 193, 7, 0.35);
+  outline: none;
+}
+
+.player-card__number {
+  position: absolute;
+  top: -14px;
+  left: -14px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--card-amber);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.player-card__photo {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border: 1px solid rgba(245, 245, 240, 0.2);
+  border-radius: 6px;
+  background: linear-gradient(160deg, rgba(45, 106, 79, 0.6), rgba(27, 67, 50, 0.9));
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.player-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+  transition: transform 0.25s ease;
+}
+
+.player-card:hover .player-card__img,
+.player-card:focus-visible .player-card__img {
+  transform: scale(1.04);
+}
+
+.player-card__name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 18px;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.player-card__desc {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 1.4;
+  color: rgba(245, 245, 240, 0.68);
+}

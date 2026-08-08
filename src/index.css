@@ -15,6 +15,20 @@
   --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
 
+  /* Matchday design system — pitch/card palette + type stack.
+     Scoped to the landing page and nav shell for now; Mode1/2/3 keep
+     the tokens above until they get their own pass. */
+  --pitch-dark: #1b4332;
+  --pitch-mid: #2d6a4f;
+  --chalk: #f5f5f0;
+  --card-amber: #ffc107;
+  --card-red: #e63946;
+  --ink: #0b1f17;
+
+  --font-display: 'Oswald', 'Segoe UI', sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'Space Mono', ui-monospace, Consolas, monospace;
+
   font: 18px/145% var(--sans);
   letter-spacing: 0.18px;
   color-scheme: light dark;
@@ -87,6 +101,29 @@ h2 {
 }
 p {
   margin: 0;
+}
+
+.back-to-lineup {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 16px 0 0 16px;
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.back-to-lineup:hover,
+.back-to-lineup:focus-visible {
+  color: var(--card-amber);
+  border-color: var(--card-amber);
+  outline: none;
 }
 
 .timer-row {
