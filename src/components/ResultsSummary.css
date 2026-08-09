@@ -61,6 +61,16 @@
   color: var(--chalk);
 }
 
+.results__subtitle {
+  margin: -14px 0 0;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: rgba(245, 245, 240, 0.55);
+}
+
 .results__list {
   width: 100%;
   list-style: none;

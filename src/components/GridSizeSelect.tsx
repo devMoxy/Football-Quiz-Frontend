@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import Dropdown from './Dropdown'
+import './CategorySelect.css'
 
 interface GridSizeOption {
   label: string
@@ -29,33 +31,43 @@ function GridSizeSelect({ onStart, loading, error }: GridSizeSelectProps) {
     onStart(gridSize)
   }
 
+  const gridSizeOptions = GRID_SIZE_OPTIONS.map((option) => ({
+    value: String(option.gridSize),
+    label: `${option.label} (${option.gridSize * option.gridSize} boxes)`,
+  }))
+
   return (
-    <form onSubmit={handleSubmit}>
-      <h1>Player Achievement Matching</h1>
-      <p>
-        Match each player to the achievement box they belong to. Miss once, and we'll bring you a
-        second chance — but only one retry per box.
-      </p>
+    <div className="setup">
+      <form className="setup__panel" onSubmit={handleSubmit}>
+        <p className="setup__kicker">Know Your Legends</p>
+        <h1 className="setup__title">Achievement Matching</h1>
 
-      <label htmlFor="gridSize">Difficulty</label>
-      <select
-        id="gridSize"
-        value={gridSize}
-        onChange={(e) => setGridSize(Number(e.target.value))}
-      >
-        {GRID_SIZE_OPTIONS.map((option) => (
-          <option key={option.gridSize} value={option.gridSize}>
-            {option.label}
-          </option>
-        ))}
-      </select>
+        <div className="setup__field setup__field--primary">
+          <label className="setup__label">Difficulty</label>
+          <Dropdown
+            label="Difficulty"
+            options={gridSizeOptions}
+            value={String(gridSize)}
+            onChange={(v) => setGridSize(Number(v))}
+          />
+        </div>
 
-      {error && <p role="alert">{error}</p>}
+        <p className="setup__hint">
+          Match each player to the achievement box they belong to. Miss once, and we'll bring you
+          a second chance — but only one retry per box.
+        </p>
 
-      <button type="submit" disabled={loading}>
-        {loading ? 'Starting…' : 'Start Round'}
-      </button>
-    </form>
+        {error && (
+          <p className="setup__error" role="alert">
+            {error}
+          </p>
+        )}
+
+        <button type="submit" className="setup__submit" disabled={loading}>
+          {loading ? 'Starting…' : 'Start Round'}
+        </button>
+      </form>
+    </div>
   )
 }
 

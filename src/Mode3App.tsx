@@ -4,6 +4,8 @@ import { guessAchievementMatch, lifelineAchievementMatch, startAchievementMatch 
 import GridSizeSelect from './components/GridSizeSelect'
 import AchievementGrid from './components/AchievementGrid'
 import ActivePlayerCard from './components/ActivePlayerCard'
+import './Mode3Play.css'
+import './components/ResultsSummary.css'
 
 type RoundStage = 'setup' | 'playing' | 'complete'
 
@@ -251,46 +253,65 @@ function Mode3App() {
       )}
 
       {stage === 'playing' && round && activePlayer && (
-        <>
-          <p className="timer-row">
-            Time left: {timeLeft}s
-            {penaltyFlash !== null && (
-              <span key={penaltyFlash} className="penalty-flash" aria-live="polite">
-                -2s!
-              </span>
-            )}
-          </p>
-          <ActivePlayerCard
-            player={activePlayer}
-            playersShownCount={playersShownCount}
-            totalPlayers={round.totalPlayers}
-          />
-          <button type="button" onClick={handleSkip} disabled={guessPending}>
-            Skip
-          </button>
-          <button type="button" onClick={handleLifeline} disabled={guessPending || lifelineUsed}>
-            Lifeline
-          </button>
-          {error && <p role="alert">{error}</p>}
-          <AchievementGrid
-            achievements={round.achievements}
-            gridSize={round.gridSize}
-            tickedAchievementIds={tickedAchievementIds}
-            lockedAchievementIds={lockedAchievementIds}
-            onBoxClick={handleBoxClick}
-            disabled={guessPending}
-          />
-        </>
+        <div className="playing">
+          <div className="playing__inner">
+            <div className={`timer${timeLeft <= TIME_FLOOR_SECONDS ? ' timer--warning' : ''}`}>
+              <span className="timer__value">{timeLeft}</span>
+              <span className="timer__unit">s</span>
+              {penaltyFlash !== null && (
+                <span key={penaltyFlash} className="timer__penalty" aria-live="polite">
+                  -2s!
+                </span>
+              )}
+            </div>
+            <ActivePlayerCard
+              player={activePlayer}
+              playersShownCount={playersShownCount}
+              totalPlayers={round.totalPlayers}
+            />
+            <div className="action-row">
+              <button
+                type="button"
+                className="action-btn action-btn--skip"
+                onClick={handleSkip}
+                disabled={guessPending}
+              >
+                Skip
+              </button>
+              <button
+                type="button"
+                className={`action-btn action-btn--lifeline${lifelineUsed ? ' action-btn--spent' : ''}`}
+                onClick={handleLifeline}
+                disabled={guessPending || lifelineUsed}
+              >
+                {lifelineUsed ? 'Lifeline Used' : 'Lifeline'}
+              </button>
+            </div>
+            {error && <p role="alert">{error}</p>}
+            <AchievementGrid
+              achievements={round.achievements}
+              gridSize={round.gridSize}
+              tickedAchievementIds={tickedAchievementIds}
+              lockedAchievementIds={lockedAchievementIds}
+              onBoxClick={handleBoxClick}
+              disabled={guessPending}
+            />
+          </div>
+        </div>
       )}
 
       {stage === 'complete' && round && (
-        <div>
-          <h1>
-            Round complete — Score: {tickedAchievementIds.size} / {round.gridSize * round.gridSize}
-          </h1>
-          <button type="button" onClick={handleRestart}>
-            Play Again
-          </button>
+        <div className="results">
+          <div className="results__panel">
+            <p className="results__kicker">Full Time</p>
+            <p className="results__score">
+              {tickedAchievementIds.size} / {round.gridSize * round.gridSize}
+            </p>
+            <p className="results__subtitle">Boxes Matched</p>
+            <button type="button" className="results__restart" onClick={handleRestart}>
+              Play Again
+            </button>
+          </div>
         </div>
       )}
     </section>

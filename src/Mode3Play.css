@@ -1,0 +1,179 @@
+.playing {
+  position: relative;
+  min-height: 100svh;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  background: var(--pitch-dark);
+  color: var(--chalk);
+  display: flex;
+  justify-content: center;
+  padding: 40px 24px 56px;
+}
+
+.playing::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    100deg,
+    var(--pitch-dark) 0px,
+    var(--pitch-dark) 90px,
+    var(--pitch-mid) 90px,
+    var(--pitch-mid) 180px
+  );
+  opacity: 0.4;
+  z-index: 0;
+}
+
+.playing__inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 720px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.timer {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  padding: 8px 22px;
+  background: rgba(11, 31, 23, 0.55);
+  border: 1px solid rgba(245, 245, 240, 0.14);
+  border-radius: 999px;
+  box-shadow: 0 12px 24px -14px rgba(0, 0, 0, 0.5);
+}
+
+.timer__value {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: clamp(30px, 5.5vw, 42px);
+  line-height: 1;
+  color: var(--chalk);
+  transition: color 0.3s ease;
+}
+
+.timer__unit {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: rgba(245, 245, 240, 0.55);
+}
+
+/* Purely a style trigger off the existing timeLeft value — reuses the
+   TIME_FLOOR_SECONDS threshold already meaningful in the timer logic
+   (the floor wrong guesses degrade toward) rather than inventing a new one. */
+.timer--warning {
+  border-color: rgba(230, 57, 70, 0.5);
+}
+
+.timer--warning .timer__value {
+  color: var(--card-red);
+}
+
+.action-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  background: rgba(11, 31, 23, 0.55);
+  border: 1px solid rgba(245, 245, 240, 0.22);
+  border-radius: 999px;
+  color: var(--chalk);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    opacity 0.2s ease,
+    filter 0.2s ease,
+    transform 0.15s ease;
+}
+
+.action-btn:hover:not(:disabled) {
+  color: var(--card-amber);
+  border-color: var(--card-amber);
+  background: rgba(255, 193, 7, 0.1);
+}
+
+.action-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.action-btn:disabled {
+  cursor: not-allowed;
+}
+
+.action-btn--skip:disabled {
+  opacity: 0.5;
+}
+
+/* Lifeline reads as accented/amber while available. */
+.action-btn--lifeline {
+  border-color: rgba(255, 193, 7, 0.4);
+  color: var(--card-amber);
+}
+
+.action-btn--lifeline:hover:not(:disabled) {
+  background: rgba(255, 193, 7, 0.16);
+}
+
+.action-btn--lifeline:disabled:not(.action-btn--spent) {
+  opacity: 0.5;
+}
+
+/* Spent: distinctly greyed/desaturated once used for the round, echoing
+   the achievement grid's locked-box treatment rather than just dimming
+   the amber accent. */
+.action-btn--spent {
+  color: rgba(245, 245, 240, 0.4);
+  border-color: rgba(245, 245, 240, 0.14);
+  background: rgba(11, 31, 23, 0.35);
+  filter: grayscale(1);
+  opacity: 0.55;
+}
+
+.timer__penalty {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  transform: translateY(-100%);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--card-red);
+  animation: timer-penalty-pop 0.7s ease-out forwards;
+}
+
+@keyframes timer-penalty-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(-100%) scale(0.9);
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(-120%) scale(1.1);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(-140%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-160%) scale(1);
+  }
+}
