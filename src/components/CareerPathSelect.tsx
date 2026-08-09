@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import type { Difficulty } from '../types/quiz'
+import Dropdown from './Dropdown'
+import './CategorySelect.css'
 
 const DIFFICULTIES: Difficulty[] = ['EASY', 'MEDIUM', 'HARD']
+const QUESTION_COUNT_OPTIONS = [5, 10, 15, 20]
 
 interface CareerPathSelectProps {
   onStart: (difficulty: Difficulty, numberOfQuestions: number) => void
@@ -18,39 +21,51 @@ function CareerPathSelect({ onStart, loading, error }: CareerPathSelectProps) {
     onStart(difficulty, numberOfQuestions)
   }
 
+  const difficultyOptions = DIFFICULTIES.map((d) => ({ value: d, label: d }))
+  const questionCountOptions = QUESTION_COUNT_OPTIONS.map((n) => ({
+    value: String(n),
+    label: String(n),
+  }))
+
   return (
-    <form onSubmit={handleSubmit}>
-      <h1>Career Path Guessing</h1>
+    <div className="setup">
+      <form className="setup__panel" onSubmit={handleSubmit}>
+        <p className="setup__kicker">Guess The Journey</p>
+        <h1 className="setup__title">Career Path</h1>
 
-      <label htmlFor="difficulty">Difficulty</label>
-      <select
-        id="difficulty"
-        value={difficulty}
-        onChange={(e) => setDifficulty(e.target.value as Difficulty)}
-      >
-        {DIFFICULTIES.map((d) => (
-          <option key={d} value={d}>
-            {d}
-          </option>
-        ))}
-      </select>
+        <div className="setup__row">
+          <div className="setup__field">
+            <label className="setup__label">Difficulty</label>
+            <Dropdown
+              label="Difficulty"
+              options={difficultyOptions}
+              value={difficulty}
+              onChange={(v) => setDifficulty(v as Difficulty)}
+            />
+          </div>
 
-      <label htmlFor="numberOfQuestions">Number of questions</label>
-      <input
-        id="numberOfQuestions"
-        type="number"
-        min={1}
-        max={20}
-        value={numberOfQuestions}
-        onChange={(e) => setNumberOfQuestions(Number(e.target.value))}
-      />
+          <div className="setup__field">
+            <label className="setup__label">Questions</label>
+            <Dropdown
+              label="Number of questions"
+              options={questionCountOptions}
+              value={String(numberOfQuestions)}
+              onChange={(v) => setNumberOfQuestions(Number(v))}
+            />
+          </div>
+        </div>
 
-      {error && <p role="alert">{error}</p>}
+        {error && (
+          <p className="setup__error" role="alert">
+            {error}
+          </p>
+        )}
 
-      <button type="submit" disabled={loading}>
-        {loading ? 'Starting…' : 'Start Quiz'}
-      </button>
-    </form>
+        <button type="submit" className="setup__submit" disabled={loading}>
+          {loading ? 'Starting…' : 'Start Quiz'}
+        </button>
+      </form>
+    </div>
   )
 }
 

@@ -1,4 +1,7 @@
+import { Fragment } from 'react'
 import type { CareerPathQuestionDTO, CareerPathQuizResultDTO } from '../types/quiz'
+import './ResultsSummary.css'
+import './CareerPathQuestion.css'
 
 interface CareerPathResultsProps {
   results: CareerPathQuizResultDTO
@@ -13,31 +16,74 @@ function CareerPathResults({ results, questions, onRestart }: CareerPathResultsP
   }
 
   return (
-    <div>
-      <h1>
-        Score: {results.score} / {results.totalQuestions}
-      </h1>
+    <div className="results">
+      <div className="results__panel">
+        <p className="results__kicker">Full Time</p>
+        <p className="results__score">
+          {results.score} / {results.totalQuestions}
+        </p>
 
-      <ul style={{ listStyle: 'none', padding: 0 }}>
-        {results.results.map((result) => {
-          const question = questions.find((q) => q.id === result.questionId)
-          if (!question) return null
+        <ul className="results__list">
+          {results.results.map((result) => {
+            const question = questions.find((q) => q.id === result.questionId)
+            if (!question) return null
 
-          return (
-            <li key={result.questionId}>
-              <p>
-                Your answer: {optionLabel(question, result.selectedAnswerIndex)}{' '}
-                {result.correct ? '✅' : '❌'}
-              </p>
-              {!result.correct && <p>Correct answer: {result.correctPlayerName}</p>}
-            </li>
-          )
-        })}
-      </ul>
+            const orderedStints = [...question.clubStints].sort((a, b) => a.clubOrder - b.clubOrder)
 
-      <button type="button" onClick={onRestart}>
-        Play Again
-      </button>
+            return (
+              <li
+                key={result.questionId}
+                className={`results__item ${
+                  result.correct ? 'results__item--correct' : 'results__item--incorrect'
+                }`}
+              >
+                <span className="results__item-icon" aria-hidden="true">
+                  {result.correct ? '✓' : '✕'}
+                </span>
+                <div className="results__item-body">
+                  <div className="career-path__stints career-path__stints--compact">
+                    {orderedStints.map((stint, index) => (
+                      <Fragment key={stint.clubOrder}>
+                        <div className="career-path__stint">
+                          <div className="career-path__crest">
+                            <img src={stint.logoUrl} alt={stint.clubName} />
+                          </div>
+                          <span className="career-path__club-name">{stint.clubName}</span>
+                        </div>
+                        {index < orderedStints.length - 1 && (
+                          <span className="career-path__connector" aria-hidden="true" />
+                        )}
+                      </Fragment>
+                    ))}
+                  </div>
+                  <p className="results__item-answer">
+                    Your answer:{' '}
+                    <span
+                      className={`results__item-value ${
+                        result.correct ? 'results__item-value--correct' : 'results__item-value--incorrect'
+                      }`}
+                    >
+                      {optionLabel(question, result.selectedAnswerIndex)}
+                    </span>
+                  </p>
+                  {!result.correct && (
+                    <p className="results__item-answer">
+                      Correct answer:{' '}
+                      <span className="results__item-value results__item-value--correct">
+                        {result.correctPlayerName}
+                      </span>
+                    </p>
+                  )}
+                </div>
+              </li>
+            )
+          })}
+        </ul>
+
+        <button type="button" className="results__restart" onClick={onRestart}>
+          Play Again
+        </button>
+      </div>
     </div>
   )
 }
