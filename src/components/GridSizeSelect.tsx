@@ -54,7 +54,7 @@ function GridSizeSelect({ onStart, loading, error }: GridSizeSelectProps) {
 
         <p className="setup__hint">
           Match each player to the achievement box they belong to. Miss once, and we'll bring you
-          a second chance — but only one retry per box.
+          a second chance. Only one retry is allowed per box.
         </p>
 
         {error && (

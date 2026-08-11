@@ -1,4 +1,5 @@
 import type { QuestionDTO, QuizSubmitResponse } from '../types/quiz'
+import ResultMessage from './ResultMessage'
 import './ResultsSummary.css'
 
 interface ResultsSummaryProps {
@@ -13,6 +14,8 @@ function ResultsSummary({ results, questions, onRestart }: ResultsSummaryProps) 
     return options[index]
   }
 
+  const percentage = results.totalQuestions > 0 ? results.score / results.totalQuestions : 0
+
   return (
     <div className="results">
       <div className="results__panel">
@@ -20,6 +23,7 @@ function ResultsSummary({ results, questions, onRestart }: ResultsSummaryProps) 
         <p className="results__score">
           {results.score} / {results.totalQuestions}
         </p>
+        <ResultMessage percentage={percentage} />
 
         <ul className="results__list">
           {results.results.map((result) => {

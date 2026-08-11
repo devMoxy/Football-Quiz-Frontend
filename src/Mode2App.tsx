@@ -6,14 +6,15 @@ import type {
   Difficulty,
 } from './types/quiz'
 import { startCareerPath, submitCareerPath } from './api/quizApi'
+import RulesScreen from './components/RulesScreen'
 import CareerPathSelect from './components/CareerPathSelect'
 import CareerPathQuestion from './components/CareerPathQuestion'
 import CareerPathResults from './components/CareerPathResults'
 
-type QuizStage = 'setup' | 'playing' | 'submitting' | 'results'
+type QuizStage = 'rules' | 'setup' | 'playing' | 'submitting' | 'results'
 
 function Mode2App() {
-  const [stage, setStage] = useState<QuizStage>('setup')
+  const [stage, setStage] = useState<QuizStage>('rules')
   const [questions, setQuestions] = useState<CareerPathQuestionDTO[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [answers, setAnswers] = useState<CareerPathAnswerDTO[]>([])
@@ -71,6 +72,19 @@ function Mode2App() {
 
   return (
     <section>
+      {stage === 'rules' && (
+        <RulesScreen
+          kicker="Before Kickoff"
+          title="How This Works"
+          rules={[
+            "Each question reveals a player's career through the clubs they played for, in order.",
+            "Once you answer, that's final. There's no going back to change it.",
+            "Your score stays hidden until you've answered every question, then it's revealed all at once.",
+          ]}
+          onAcknowledge={() => setStage('setup')}
+        />
+      )}
+
       {stage === 'setup' && (
         <CareerPathSelect onStart={handleStart} loading={loading} error={error} />
       )}

@@ -1,20 +1,26 @@
 import { useEffect, useRef, useState } from 'react'
 import type { AchievementMatchStartResponse, PlayerDTO } from './types/quiz'
 import { guessAchievementMatch, lifelineAchievementMatch, startAchievementMatch } from './api/quizApi'
+import RulesScreen from './components/RulesScreen'
 import GridSizeSelect from './components/GridSizeSelect'
 import AchievementGrid from './components/AchievementGrid'
 import ActivePlayerCard from './components/ActivePlayerCard'
+import ResultMessage, { WIN_THRESHOLD } from './components/ResultMessage'
 import './Mode3Play.css'
 import './components/ResultsSummary.css'
 
-type RoundStage = 'setup' | 'playing' | 'complete'
+type RoundStage = 'rules' | 'setup' | 'playing' | 'complete'
+type EndReason = 'timeout' | 'players-exhausted' | 'board-resolved' | null
 
 const STARTING_TIME_SECONDS = 20
 const WRONG_GUESS_PENALTY_SECONDS = 2
 const TIME_FLOOR_SECONDS = 6
 
+const EARLY_END_LOSS_MESSAGE =
+  'You have missed too many chances and let too many boxes slip away, so there is nothing left on the board you can still win. The round ends here.'
+
 function Mode3App() {
-  const [stage, setStage] = useState<RoundStage>('setup')
+  const [stage, setStage] = useState<RoundStage>('rules')
   const [round, setRound] = useState<AchievementMatchStartResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -31,7 +37,7 @@ function Mode3App() {
 
   const [timeLeft, setTimeLeft] = useState(STARTING_TIME_SECONDS)
   const timeLeftRef = useRef(STARTING_TIME_SECONDS)
-  const stageRef = useRef<RoundStage>('setup')
+  const stageRef = useRef<RoundStage>('rules')
 
   // The countdown allowance carried into each new player's turn. Degrades on
   // wrong guesses (floored at TIME_FLOOR_SECONDS) and persists across correct
@@ -41,6 +47,8 @@ function Mode3App() {
 
   const [penaltyFlash, setPenaltyFlash] = useState<number | null>(null)
   const penaltyFlashTimeoutRef = useRef<number | undefined>(undefined)
+
+  const [endReason, setEndReason] = useState<EndReason>(null)
 
   useEffect(() => {
     timeLeftRef.current = timeLeft
@@ -75,6 +83,7 @@ function Mode3App() {
   // penalty floor below which only applies to wrong-guess subtraction.
   useEffect(() => {
     if (stage === 'playing' && timeLeft <= 0) {
+      setEndReason('timeout')
       setStage('complete')
     }
   }, [timeLeft, stage])
@@ -86,6 +95,7 @@ function Mode3App() {
   useEffect(() => {
     if (stage !== 'playing' || !round) return
     if (primaryIndex >= round.players.length) {
+      setEndReason('players-exhausted')
       setStage('complete')
       return
     }
@@ -105,9 +115,11 @@ function Mode3App() {
         setTickedAchievementIds(new Set())
         setLockedAchievementIds(new Set())
         setBaseTime(STARTING_TIME_SECONDS)
+        setTimeLeft(STARTING_TIME_SECONDS)
         window.clearTimeout(penaltyFlashTimeoutRef.current)
         setPenaltyFlash(null)
         setLifelineUsed(false)
+        setEndReason(null)
         setStage('playing')
       })
       .catch((err: Error) => setError(err.message))
@@ -121,9 +133,21 @@ function Mode3App() {
     setPlayersShownCount((count) => count + 1)
   }
 
+  // Once every box is ticked or locked, nothing left on the board can
+  // change the outcome — AchievementGrid already disables resolved boxes,
+  // so there is no point burning more time or cycling more players.
+  const isBoardResolved = (ticked: Set<number>, locked: Set<number>) =>
+    !!round && ticked.size + locked.size >= round.achievements.length
+
   const handlePrimaryTurnResult = (achievementId: number, correct: boolean) => {
     if (correct) {
-      setTickedAchievementIds((prev) => new Set(prev).add(achievementId))
+      const nextTicked = new Set(tickedAchievementIds).add(achievementId)
+      setTickedAchievementIds(nextTicked)
+      if (isBoardResolved(nextTicked, lockedAchievementIds)) {
+        setEndReason('board-resolved')
+        setStage('complete')
+        return
+      }
       advanceToNextPrimary()
       return
     }
@@ -135,7 +159,13 @@ function Mode3App() {
       setTriggeringAchievementId(achievementId)
       setPlayersShownCount((count) => count + 1)
     } else {
-      setLockedAchievementIds((prev) => new Set(prev).add(achievementId))
+      const nextLocked = new Set(lockedAchievementIds).add(achievementId)
+      setLockedAchievementIds(nextLocked)
+      if (isBoardResolved(tickedAchievementIds, nextLocked)) {
+        setEndReason('board-resolved')
+        setStage('complete')
+        return
+      }
       advanceToNextPrimary()
     }
   }
@@ -160,6 +190,13 @@ function Mode3App() {
 
     setTickedAchievementIds(nextTicked)
     setLockedAchievementIds(nextLocked)
+
+    if (isBoardResolved(nextTicked, nextLocked)) {
+      setEndReason('board-resolved')
+      setStage('complete')
+      return
+    }
+
     advanceToNextPrimary()
   }
 
@@ -206,7 +243,13 @@ function Mode3App() {
   const handleSkip = () => {
     if (guessPending) return
     if (triggeringAchievementId !== null) {
-      setLockedAchievementIds((prev) => new Set(prev).add(triggeringAchievementId))
+      const nextLocked = new Set(lockedAchievementIds).add(triggeringAchievementId)
+      setLockedAchievementIds(nextLocked)
+      if (isBoardResolved(tickedAchievementIds, nextLocked)) {
+        setEndReason('board-resolved')
+        setStage('complete')
+        return
+      }
     }
     advanceToNextPrimary()
   }
@@ -248,6 +291,19 @@ function Mode3App() {
 
   return (
     <section>
+      {stage === 'rules' && (
+        <RulesScreen
+          kicker="Before Kickoff"
+          title="How This Works"
+          rules={[
+            'Match each player shown to the achievement box they belong to on the grid.',
+            'Get a match wrong, and you get one backup chance for that same achievement. Only one retry per box.',
+            'Watch the clock. A wrong guess costs you 2 seconds and mostly just changes who is shown next, but running out of time ends the round immediately.',
+          ]}
+          onAcknowledge={() => setStage('setup')}
+        />
+      )}
+
       {stage === 'setup' && (
         <GridSizeSelect onStart={handleStart} loading={loading} error={error} />
       )}
@@ -255,65 +311,79 @@ function Mode3App() {
       {stage === 'playing' && round && activePlayer && (
         <div className="playing">
           <div className="playing__inner">
-            <div className={`timer${timeLeft <= TIME_FLOOR_SECONDS ? ' timer--warning' : ''}`}>
-              <span className="timer__value">{timeLeft}</span>
-              <span className="timer__unit">s</span>
-              {penaltyFlash !== null && (
-                <span key={penaltyFlash} className="timer__penalty" aria-live="polite">
-                  -2s!
-                </span>
-              )}
-            </div>
-            <ActivePlayerCard
-              player={activePlayer}
-              playersShownCount={playersShownCount}
-              totalPlayers={round.totalPlayers}
-            />
-            <div className="action-row">
-              <button
-                type="button"
-                className="action-btn action-btn--skip"
-                onClick={handleSkip}
-                disabled={guessPending}
-              >
-                Skip
-              </button>
-              <button
-                type="button"
-                className={`action-btn action-btn--lifeline${lifelineUsed ? ' action-btn--spent' : ''}`}
-                onClick={handleLifeline}
-                disabled={guessPending || lifelineUsed}
-              >
-                {lifelineUsed ? 'Lifeline Used' : 'Lifeline'}
-              </button>
+            <div className="playing__header">
+              <ActivePlayerCard
+                player={activePlayer}
+                playersShownCount={playersShownCount}
+                totalPlayers={round.totalPlayers}
+              />
+              <div className="playing__header-controls">
+                <div className={`timer${timeLeft <= TIME_FLOOR_SECONDS ? ' timer--warning' : ''}`}>
+                  <span className="timer__value">{timeLeft}</span>
+                  <span className="timer__unit">s</span>
+                  {penaltyFlash !== null && (
+                    <span key={penaltyFlash} className="timer__penalty" aria-live="polite">
+                      Lost 2s!
+                    </span>
+                  )}
+                </div>
+                <div className="action-row">
+                  <button
+                    type="button"
+                    className="action-btn action-btn--skip"
+                    onClick={handleSkip}
+                    disabled={guessPending}
+                  >
+                    Skip
+                  </button>
+                  <button
+                    type="button"
+                    className={`action-btn action-btn--lifeline${lifelineUsed ? ' action-btn--spent' : ''}`}
+                    onClick={handleLifeline}
+                    disabled={guessPending || lifelineUsed}
+                  >
+                    {lifelineUsed ? 'Lifeline Used' : 'Lifeline'}
+                  </button>
+                </div>
+              </div>
             </div>
             {error && <p role="alert">{error}</p>}
-            <AchievementGrid
-              achievements={round.achievements}
-              gridSize={round.gridSize}
-              tickedAchievementIds={tickedAchievementIds}
-              lockedAchievementIds={lockedAchievementIds}
-              onBoxClick={handleBoxClick}
-              disabled={guessPending}
-            />
+            <div className="playing__board">
+              <AchievementGrid
+                achievements={round.achievements}
+                gridSize={round.gridSize}
+                tickedAchievementIds={tickedAchievementIds}
+                lockedAchievementIds={lockedAchievementIds}
+                onBoxClick={handleBoxClick}
+                disabled={guessPending}
+              />
+            </div>
           </div>
         </div>
       )}
 
-      {stage === 'complete' && round && (
-        <div className="results">
-          <div className="results__panel">
-            <p className="results__kicker">Full Time</p>
-            <p className="results__score">
-              {tickedAchievementIds.size} / {round.gridSize * round.gridSize}
-            </p>
-            <p className="results__subtitle">Boxes Matched</p>
-            <button type="button" className="results__restart" onClick={handleRestart}>
-              Play Again
-            </button>
+      {stage === 'complete' && round && (() => {
+        const percentage = tickedAchievementIds.size / (round.gridSize * round.gridSize)
+        const isWin = percentage >= WIN_THRESHOLD
+        const overrideMessage =
+          endReason === 'board-resolved' && !isWin ? EARLY_END_LOSS_MESSAGE : undefined
+
+        return (
+          <div className="results">
+            <div className="results__panel">
+              <p className="results__kicker">Full Time</p>
+              <p className="results__score">
+                {tickedAchievementIds.size} / {round.gridSize * round.gridSize}
+              </p>
+              <ResultMessage percentage={percentage} overrideMessage={overrideMessage} />
+              <p className="results__subtitle">Boxes Matched</p>
+              <button type="button" className="results__restart" onClick={handleRestart}>
+                Play Again
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
     </section>
   )
 }

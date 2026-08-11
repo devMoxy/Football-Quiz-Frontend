@@ -1,5 +1,6 @@
 import { Fragment } from 'react'
 import type { CareerPathQuestionDTO, CareerPathQuizResultDTO } from '../types/quiz'
+import ResultMessage from './ResultMessage'
 import './ResultsSummary.css'
 import './CareerPathQuestion.css'
 
@@ -15,6 +16,8 @@ function CareerPathResults({ results, questions, onRestart }: CareerPathResultsP
     return options[index]
   }
 
+  const percentage = results.totalQuestions > 0 ? results.score / results.totalQuestions : 0
+
   return (
     <div className="results">
       <div className="results__panel">
@@ -22,6 +25,7 @@ function CareerPathResults({ results, questions, onRestart }: CareerPathResultsP
         <p className="results__score">
           {results.score} / {results.totalQuestions}
         </p>
+        <ResultMessage percentage={percentage} />
 
         <ul className="results__list">
           {results.results.map((result) => {

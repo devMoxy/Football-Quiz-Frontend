@@ -1,37 +1,45 @@
 .active-player-card {
   position: relative;
   z-index: 1;
-  width: 100%;
-  max-width: 420px;
+  flex: 1;
+  min-width: 220px;
   display: flex;
-  flex-direction: column;
   align-items: center;
   gap: 14px;
   background: rgba(11, 31, 23, 0.55);
   border: 1px solid rgba(245, 245, 240, 0.14);
   border-radius: 14px;
-  padding: 28px 32px 32px;
-  box-shadow: 0 24px 48px -20px rgba(0, 0, 0, 0.55);
+  padding: 8px 20px 8px 8px;
+  box-shadow: 0 12px 24px -14px rgba(0, 0, 0, 0.5);
+}
+
+.active-player-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  text-align: left;
 }
 
 .active-player-card__counter {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 2px;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
   color: var(--card-amber);
   margin: 0;
 }
 
 .active-player-card__image-wrap {
-  width: 128px;
-  height: 128px;
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   overflow: hidden;
   background: var(--pitch-dark);
-  border: 3px solid rgba(255, 193, 7, 0.35);
-  box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.5);
+  border: 2px solid rgba(255, 193, 7, 0.35);
+  box-shadow: 0 8px 16px -8px rgba(0, 0, 0, 0.5);
 }
 
 .active-player-card__image {
@@ -45,9 +53,11 @@
   font-family: var(--font-display);
   font-weight: 700;
   text-transform: uppercase;
-  font-size: clamp(22px, 3.6vw, 30px);
-  letter-spacing: 0.4px;
+  font-size: clamp(16px, 2.2vw, 20px);
+  letter-spacing: 0.3px;
   color: var(--chalk);
   margin: 0;
-  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

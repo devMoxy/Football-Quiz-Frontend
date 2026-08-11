@@ -73,6 +73,10 @@ function Home({ onSelectMode }: HomeProps) {
           </button>
         ))}
       </div>
+
+      <footer className="home__footer">
+        Built pitchside by a self taught developer named Enoch, better known as devMoxy.
+      </footer>
     </div>
   )
 }

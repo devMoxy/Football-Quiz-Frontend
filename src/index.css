@@ -131,29 +131,44 @@ p {
 }
 
 .back-to-lineup {
+  position: relative;
+  z-index: 2;
+  align-self: flex-start;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   margin: 16px 0 0 16px;
-  padding: 6px 14px;
-  background: var(--pitch-dark);
-  border: 1px solid rgba(245, 245, 240, 0.22);
-  border-radius: 999px;
-  font-family: var(--font-body);
+  padding: 12px 20px 12px 16px;
+  background: var(--pitch-mid);
+  border: 1px solid rgba(245, 245, 240, 0.3);
+  border-radius: 10px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   font-size: 13px;
   color: var(--chalk);
   cursor: pointer;
+  box-shadow: 0 4px 12px -4px rgba(0, 0, 0, 0.4);
   transition:
     color 0.2s ease,
     border-color 0.2s ease,
-    background-color 0.2s ease;
+    background-color 0.2s ease,
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.back-to-lineup__icon {
+  flex-shrink: 0;
 }
 
 .back-to-lineup:hover,
 .back-to-lineup:focus-visible {
-  color: var(--card-amber);
+  color: var(--ink);
   border-color: var(--card-amber);
-  background: var(--pitch-mid);
+  background: var(--card-amber);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -10px rgba(255, 193, 7, 0.6);
   outline: none;
 }
 

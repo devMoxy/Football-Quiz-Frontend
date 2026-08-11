@@ -61,6 +61,26 @@
   color: var(--chalk);
 }
 
+.results__message {
+  margin: -8px 0 0;
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 14px;
+  text-align: center;
+}
+
+.results__message--win {
+  background: color-mix(in srgb, var(--success) 18%, transparent);
+  color: var(--success);
+}
+
+.results__message--loss {
+  background: rgba(255, 193, 7, 0.15);
+  color: var(--card-amber);
+}
+
 .results__subtitle {
   margin: -14px 0 0;
   font-family: var(--font-body);

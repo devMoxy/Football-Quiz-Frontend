@@ -115,7 +115,7 @@ function Dropdown({ label, options, value, onChange, disabled }: DropdownProps) 
         onClick={() => setOpen((o) => !o)}
         onKeyDown={handleTriggerKeyDown}
       >
-        <span className="dropdown__value">{selected?.label ?? '—'}</span>
+        <span className="dropdown__value">{selected?.label ?? 'Select'}</span>
         <span className="dropdown__chevron" aria-hidden="true" />
       </button>
 

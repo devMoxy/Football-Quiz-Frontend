@@ -194,3 +194,16 @@
   line-height: 1.4;
   color: rgba(245, 245, 240, 0.68);
 }
+
+.home__footer {
+  position: relative;
+  z-index: 1;
+  margin-top: 48px;
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 12px;
+  letter-spacing: 0.2px;
+  color: rgba(245, 245, 240, 0.4);
+  text-align: center;
+  max-width: 420px;
+}

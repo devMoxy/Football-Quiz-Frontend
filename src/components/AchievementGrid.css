@@ -90,7 +90,8 @@
 }
 
 .achievement-grid__image {
-  width: 58%;
+  width: 46%;
+  flex-shrink: 0;
   aspect-ratio: 1;
   object-fit: contain;
   overflow: hidden;
@@ -98,13 +99,11 @@
 }
 
 .achievement-grid__description {
+  width: 100%;
   margin: 0;
   font-family: var(--font-body);
   font-size: clamp(9px, 1.3vw, 12px);
   line-height: 1.25;
   color: rgba(245, 245, 240, 0.85);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  overflow-wrap: break-word;
 }
