@@ -1,14 +1,16 @@
 import type { QuestionDTO, QuizSubmitResponse } from '../types/quiz'
-import ResultMessage from './ResultMessage'
+import ResultMessage, { SupplementaryMessage } from './ResultMessage'
+import { ROUND_TIMEOUT_MESSAGES } from './messagePools'
 import './ResultsSummary.css'
 
 interface ResultsSummaryProps {
   results: QuizSubmitResponse
   questions: QuestionDTO[]
+  timedOut: boolean
   onRestart: () => void
 }
 
-function ResultsSummary({ results, questions, onRestart }: ResultsSummaryProps) {
+function ResultsSummary({ results, questions, timedOut, onRestart }: ResultsSummaryProps) {
   const optionLabel = (question: QuestionDTO, index: number) => {
     const options = [question.optionA, question.optionB, question.optionC, question.optionD]
     return options[index]
@@ -24,6 +26,7 @@ function ResultsSummary({ results, questions, onRestart }: ResultsSummaryProps) 
           {results.score} / {results.totalQuestions}
         </p>
         <ResultMessage percentage={percentage} />
+        {timedOut && <SupplementaryMessage pool={ROUND_TIMEOUT_MESSAGES} />}
 
         <ul className="results__list">
           {results.results.map((result) => {

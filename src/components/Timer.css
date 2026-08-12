@@ -1,0 +1,34 @@
+.timer {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  padding: 8px 22px;
+  background: rgba(11, 31, 23, 0.55);
+  border: 1px solid rgba(245, 245, 240, 0.14);
+  border-radius: 999px;
+  box-shadow: 0 12px 24px -14px rgba(0, 0, 0, 0.5);
+}
+
+.timer__value {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: clamp(30px, 5.5vw, 42px);
+  line-height: 1;
+  color: var(--chalk);
+  transition: color 0.3s ease;
+}
+
+.timer__unit {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: rgba(245, 245, 240, 0.55);
+}
+
+.timer--warning {
+  border-color: rgba(230, 57, 70, 0.5);
+}
+
+.timer--warning .timer__value {
+  color: var(--card-red);
+}

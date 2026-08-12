@@ -5,7 +5,8 @@ import RulesScreen from './components/RulesScreen'
 import GridSizeSelect from './components/GridSizeSelect'
 import AchievementGrid from './components/AchievementGrid'
 import ActivePlayerCard from './components/ActivePlayerCard'
-import ResultMessage, { WIN_THRESHOLD } from './components/ResultMessage'
+import ResultMessage, { SupplementaryMessage, WIN_THRESHOLD } from './components/ResultMessage'
+import Timer from './components/Timer'
 import './Mode3Play.css'
 import './components/ResultsSummary.css'
 
@@ -18,6 +19,15 @@ const TIME_FLOOR_SECONDS = 6
 
 const EARLY_END_LOSS_MESSAGE =
   'You have missed too many chances and let too many boxes slip away, so there is nothing left on the board you can still win. The round ends here.'
+
+const FLOOR_WARNING_MESSAGE = 'Six seconds left per player now. Every second counts.'
+const FLOOR_WARNING_DURATION_MS = 3500
+
+const MODE3_TIMEOUT_MESSAGES = [
+  'You ran out of time right at the edge. So close!',
+  'The clock beat you to it. Almost there!',
+  'So close! The final second slipped away.',
+]
 
 function Mode3App() {
   const [stage, setStage] = useState<RoundStage>('rules')
@@ -47,6 +57,11 @@ function Mode3App() {
 
   const [penaltyFlash, setPenaltyFlash] = useState<number | null>(null)
   const penaltyFlashTimeoutRef = useRef<number | undefined>(undefined)
+
+  // Fires once per round, the first moment baseTime bottoms out at the floor.
+  const [floorWarningVisible, setFloorWarningVisible] = useState(false)
+  const floorWarningShownRef = useRef(false)
+  const floorWarningTimeoutRef = useRef<number | undefined>(undefined)
 
   const [endReason, setEndReason] = useState<EndReason>(null)
 
@@ -118,6 +133,9 @@ function Mode3App() {
         setTimeLeft(STARTING_TIME_SECONDS)
         window.clearTimeout(penaltyFlashTimeoutRef.current)
         setPenaltyFlash(null)
+        window.clearTimeout(floorWarningTimeoutRef.current)
+        setFloorWarningVisible(false)
+        floorWarningShownRef.current = false
         setLifelineUsed(false)
         setEndReason(null)
         setStage('playing')
@@ -203,13 +221,24 @@ function Mode3App() {
   // Wrong guesses degrade the shared baseTime (floored) and flash a cosmetic
   // penalty indicator — they no longer end the round by themselves.
   const applyWrongGuessPenalty = () => {
-    const next = Math.max(baseTimeRef.current - WRONG_GUESS_PENALTY_SECONDS, TIME_FLOOR_SECONDS)
+    const previous = baseTimeRef.current
+    const next = Math.max(previous - WRONG_GUESS_PENALTY_SECONDS, TIME_FLOOR_SECONDS)
     setBaseTime(next)
 
     window.clearTimeout(penaltyFlashTimeoutRef.current)
     const flashId = Date.now()
     setPenaltyFlash(flashId)
     penaltyFlashTimeoutRef.current = window.setTimeout(() => setPenaltyFlash(null), 700)
+
+    if (next === TIME_FLOOR_SECONDS && previous > TIME_FLOOR_SECONDS && !floorWarningShownRef.current) {
+      floorWarningShownRef.current = true
+      window.clearTimeout(floorWarningTimeoutRef.current)
+      setFloorWarningVisible(true)
+      floorWarningTimeoutRef.current = window.setTimeout(
+        () => setFloorWarningVisible(false),
+        FLOOR_WARNING_DURATION_MS,
+      )
+    }
   }
 
   const handleBoxClick = (achievementId: number) => {
@@ -283,6 +312,8 @@ function Mode3App() {
   const handleRestart = () => {
     window.clearTimeout(penaltyFlashTimeoutRef.current)
     setPenaltyFlash(null)
+    window.clearTimeout(floorWarningTimeoutRef.current)
+    setFloorWarningVisible(false)
     setStage('setup')
     setRound(null)
     setError(null)
@@ -310,6 +341,11 @@ function Mode3App() {
 
       {stage === 'playing' && round && activePlayer && (
         <div className="playing">
+          {floorWarningVisible && (
+            <div className="floor-warning" role="status" aria-live="polite">
+              {FLOOR_WARNING_MESSAGE}
+            </div>
+          )}
           <div className="playing__inner">
             <div className="playing__header">
               <ActivePlayerCard
@@ -318,15 +354,13 @@ function Mode3App() {
                 totalPlayers={round.totalPlayers}
               />
               <div className="playing__header-controls">
-                <div className={`timer${timeLeft <= TIME_FLOOR_SECONDS ? ' timer--warning' : ''}`}>
-                  <span className="timer__value">{timeLeft}</span>
-                  <span className="timer__unit">s</span>
+                <Timer value={timeLeft} warningThreshold={TIME_FLOOR_SECONDS}>
                   {penaltyFlash !== null && (
                     <span key={penaltyFlash} className="timer__penalty" aria-live="polite">
                       Lost 2s!
                     </span>
                   )}
-                </div>
+                </Timer>
                 <div className="action-row">
                   <button
                     type="button"
@@ -376,6 +410,7 @@ function Mode3App() {
                 {tickedAchievementIds.size} / {round.gridSize * round.gridSize}
               </p>
               <ResultMessage percentage={percentage} overrideMessage={overrideMessage} />
+              {endReason === 'timeout' && <SupplementaryMessage pool={MODE3_TIMEOUT_MESSAGES} />}
               <p className="results__subtitle">Boxes Matched</p>
               <button type="button" className="results__restart" onClick={handleRestart}>
                 Play Again

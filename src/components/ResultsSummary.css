@@ -81,6 +81,13 @@
   color: var(--card-amber);
 }
 
+.results__message--supplementary {
+  margin-top: -8px;
+  background: rgba(245, 245, 240, 0.08);
+  color: rgba(245, 245, 240, 0.75);
+  font-weight: 500;
+}
+
 .results__subtitle {
   margin: -14px 0 0;
   font-family: var(--font-body);

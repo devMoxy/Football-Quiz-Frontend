@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type {
   CareerPathAnswerDTO,
   CareerPathQuestionDTO,
@@ -13,6 +13,8 @@ import CareerPathResults from './components/CareerPathResults'
 
 type QuizStage = 'rules' | 'setup' | 'playing' | 'submitting' | 'results'
 
+const QUESTION_TIME_SECONDS = 20
+
 function Mode2App() {
   const [stage, setStage] = useState<QuizStage>('rules')
   const [questions, setQuestions] = useState<CareerPathQuestionDTO[]>([])
@@ -21,6 +23,61 @@ function Mode2App() {
   const [results, setResults] = useState<CareerPathQuizResultDTO | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [timedOut, setTimedOut] = useState(false)
+
+  const [timeLeft, setTimeLeft] = useState(QUESTION_TIME_SECONDS)
+  const stageRef = useRef<QuizStage>('rules')
+  const answersRef = useRef<CareerPathAnswerDTO[]>([])
+
+  useEffect(() => {
+    stageRef.current = stage
+  }, [stage])
+
+  useEffect(() => {
+    answersRef.current = answers
+  }, [answers])
+
+  // Fresh 20s on every new question.
+  useEffect(() => {
+    if (stage !== 'playing') return
+    setTimeLeft(QUESTION_TIME_SECONDS)
+  }, [currentIndex, stage])
+
+  // Ticks once per second while playing, clamped at 0.
+  useEffect(() => {
+    if (stage !== 'playing') return
+    const id = setInterval(() => {
+      setTimeLeft((prev) => Math.max(prev - 1, 0))
+    }, 1000)
+    return () => clearInterval(id)
+  }, [stage])
+
+  // Shared by both the "last question answered" path (handleAnswer, below)
+  // and the "timer hit 0" path (the effect right after this) — one place
+  // owns the submit call, error handling, and the results-stage transition,
+  // regardless of what triggered the end of round.
+  const finishRound = useCallback((finalAnswers: CareerPathAnswerDTO[], byTimeout: boolean) => {
+    if (stageRef.current !== 'playing') return
+    setStage('submitting')
+    setTimedOut(byTimeout)
+    submitCareerPath({ answers: finalAnswers })
+      .then((data) => {
+        setResults(data)
+        setStage('results')
+      })
+      .catch((err: Error) => {
+        setError(err.message)
+        setStage('playing')
+      })
+  }, [])
+
+  // Hitting 0 with no answer selected ends the whole round right there,
+  // submitting only what was already answered up to this point.
+  useEffect(() => {
+    if (stage === 'playing' && timeLeft <= 0) {
+      finishRound(answersRef.current, true)
+    }
+  }, [timeLeft, stage, finishRound])
 
   const handleStart = (difficulty: Difficulty, numberOfQuestions: number) => {
     setError(null)
@@ -30,6 +87,8 @@ function Mode2App() {
         setQuestions(data)
         setCurrentIndex(0)
         setAnswers([])
+        setTimedOut(false)
+        setTimeLeft(QUESTION_TIME_SECONDS)
         setStage('playing')
       })
       .catch((err: Error) => setError(err.message))
@@ -37,6 +96,7 @@ function Mode2App() {
   }
 
   const handleAnswer = (selectedAnswerIndex: number) => {
+    if (stageRef.current !== 'playing') return
     const question = questions[currentIndex]
     const nextAnswers = [
       ...answers.filter((a) => a.questionId !== question.id),
@@ -49,16 +109,7 @@ function Mode2App() {
       return
     }
 
-    setStage('submitting')
-    submitCareerPath({ answers: nextAnswers })
-      .then((data) => {
-        setResults(data)
-        setStage('results')
-      })
-      .catch((err: Error) => {
-        setError(err.message)
-        setStage('playing')
-      })
+    finishRound(nextAnswers, false)
   }
 
   const handleRestart = () => {
@@ -68,6 +119,8 @@ function Mode2App() {
     setAnswers([])
     setResults(null)
     setError(null)
+    setTimedOut(false)
+    setTimeLeft(QUESTION_TIME_SECONDS)
   }
 
   return (
@@ -94,6 +147,7 @@ function Mode2App() {
           question={questions[currentIndex]}
           questionNumber={currentIndex + 1}
           totalQuestions={questions.length}
+          timeLeft={timeLeft}
           onAnswer={handleAnswer}
         />
       )}
@@ -101,7 +155,12 @@ function Mode2App() {
       {stage === 'submitting' && <p>Submitting…</p>}
 
       {stage === 'results' && results && (
-        <CareerPathResults results={results} questions={questions} onRestart={handleRestart} />
+        <CareerPathResults
+          results={results}
+          questions={questions}
+          timedOut={timedOut}
+          onRestart={handleRestart}
+        />
       )}
     </section>
   )

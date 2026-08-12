@@ -11,6 +11,43 @@
   padding: 20px 24px 24px;
 }
 
+.floor-warning {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  pointer-events: none;
+  padding: 10px 20px;
+  background: rgba(230, 57, 70, 0.16);
+  border: 1px solid rgba(230, 57, 70, 0.45);
+  border-radius: 999px;
+  color: var(--chalk);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 13px;
+  text-align: center;
+  box-shadow: 0 12px 24px -14px rgba(0, 0, 0, 0.5);
+  animation: floor-warning-fade 3.5s ease-in-out forwards;
+}
+
+@keyframes floor-warning-fade {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-6px);
+  }
+  10% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  82% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
 .playing::before {
   content: '';
   position: absolute;
@@ -58,44 +95,6 @@
   min-height: 0;
   overflow-y: auto;
   padding: 2px 4px 4px 2px;
-}
-
-.timer {
-  position: relative;
-  display: inline-flex;
-  align-items: baseline;
-  gap: 3px;
-  padding: 8px 22px;
-  background: rgba(11, 31, 23, 0.55);
-  border: 1px solid rgba(245, 245, 240, 0.14);
-  border-radius: 999px;
-  box-shadow: 0 12px 24px -14px rgba(0, 0, 0, 0.5);
-}
-
-.timer__value {
-  font-family: var(--font-mono);
-  font-weight: 700;
-  font-size: clamp(30px, 5.5vw, 42px);
-  line-height: 1;
-  color: var(--chalk);
-  transition: color 0.3s ease;
-}
-
-.timer__unit {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  color: rgba(245, 245, 240, 0.55);
-}
-
-/* Purely a style trigger off the existing timeLeft value — reuses the
-   TIME_FLOOR_SECONDS threshold already meaningful in the timer logic
-   (the floor wrong guesses degrade toward) rather than inventing a new one. */
-.timer--warning {
-  border-color: rgba(230, 57, 70, 0.5);
-}
-
-.timer--warning .timer__value {
-  color: var(--card-red);
 }
 
 .action-row {

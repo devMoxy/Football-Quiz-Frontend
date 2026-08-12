@@ -35,4 +35,16 @@ function ResultMessage({ percentage, overrideMessage }: ResultMessageProps) {
   )
 }
 
+interface SupplementaryMessageProps {
+  pool: string[]
+}
+
+// Renders alongside ResultMessage, never replacing it, for extra context
+// about how the round ended (e.g. a timeout) on top of the win/loss verdict.
+export function SupplementaryMessage({ pool }: SupplementaryMessageProps) {
+  const [message] = useState(() => pickRandom(pool))
+
+  return <p className="results__message results__message--supplementary">{message}</p>
+}
+
 export default ResultMessage

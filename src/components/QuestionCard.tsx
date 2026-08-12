@@ -1,14 +1,22 @@
 import type { QuestionDTO } from '../types/quiz'
+import Timer from './Timer'
 import './QuestionCard.css'
 
 interface QuestionCardProps {
   question: QuestionDTO
   questionNumber: number
   totalQuestions: number
+  timeLeft: number
   onAnswer: (selectedAnswerIndex: number) => void
 }
 
-function QuestionCard({ question, questionNumber, totalQuestions, onAnswer }: QuestionCardProps) {
+function QuestionCard({
+  question,
+  questionNumber,
+  totalQuestions,
+  timeLeft,
+  onAnswer,
+}: QuestionCardProps) {
   const options = [question.optionA, question.optionB, question.optionC, question.optionD]
   const progressPercent = (questionNumber / totalQuestions) * 100
 
@@ -22,6 +30,10 @@ function QuestionCard({ question, questionNumber, totalQuestions, onAnswer }: Qu
           <span className="question__counter">
             Q{questionNumber} / {totalQuestions}
           </span>
+        </div>
+
+        <div className="question__timer">
+          <Timer value={timeLeft} />
         </div>
 
         <h2 className="question__text">{question.text}</h2>

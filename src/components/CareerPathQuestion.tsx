@@ -1,5 +1,6 @@
 import { Fragment } from 'react'
 import type { CareerPathQuestionDTO } from '../types/quiz'
+import Timer from './Timer'
 import './QuestionCard.css'
 import './CareerPathQuestion.css'
 
@@ -7,6 +8,7 @@ interface CareerPathQuestionProps {
   question: CareerPathQuestionDTO
   questionNumber: number
   totalQuestions: number
+  timeLeft: number
   onAnswer: (selectedAnswerIndex: number) => void
 }
 
@@ -14,6 +16,7 @@ function CareerPathQuestion({
   question,
   questionNumber,
   totalQuestions,
+  timeLeft,
   onAnswer,
 }: CareerPathQuestionProps) {
   const options = [question.optionA, question.optionB, question.optionC, question.optionD]
@@ -30,6 +33,10 @@ function CareerPathQuestion({
           <span className="question__counter">
             Q{questionNumber} / {totalQuestions}
           </span>
+        </div>
+
+        <div className="question__timer">
+          <Timer value={timeLeft} />
         </div>
 
         <h2 className="question__text">Guess the player from their career path</h2>

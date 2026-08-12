@@ -1,16 +1,18 @@
 import { Fragment } from 'react'
 import type { CareerPathQuestionDTO, CareerPathQuizResultDTO } from '../types/quiz'
-import ResultMessage from './ResultMessage'
+import ResultMessage, { SupplementaryMessage } from './ResultMessage'
+import { ROUND_TIMEOUT_MESSAGES } from './messagePools'
 import './ResultsSummary.css'
 import './CareerPathQuestion.css'
 
 interface CareerPathResultsProps {
   results: CareerPathQuizResultDTO
   questions: CareerPathQuestionDTO[]
+  timedOut: boolean
   onRestart: () => void
 }
 
-function CareerPathResults({ results, questions, onRestart }: CareerPathResultsProps) {
+function CareerPathResults({ results, questions, timedOut, onRestart }: CareerPathResultsProps) {
   const optionLabel = (question: CareerPathQuestionDTO, index: number) => {
     const options = [question.optionA, question.optionB, question.optionC, question.optionD]
     return options[index]
@@ -26,6 +28,7 @@ function CareerPathResults({ results, questions, onRestart }: CareerPathResultsP
           {results.score} / {results.totalQuestions}
         </p>
         <ResultMessage percentage={percentage} />
+        {timedOut && <SupplementaryMessage pool={ROUND_TIMEOUT_MESSAGES} />}
 
         <ul className="results__list">
           {results.results.map((result) => {
