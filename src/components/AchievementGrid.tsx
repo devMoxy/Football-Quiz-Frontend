@@ -1,5 +1,31 @@
+import { useState } from 'react'
 import type { AchievementDTO } from '../types/quiz'
+import { getWikimediaThumbnailUrl, WIKIMEDIA_IMAGE_WIDTH } from '../utils/wikimediaImage'
 import './AchievementGrid.css'
+
+type ImageStatus = 'loading' | 'loaded' | 'error'
+
+function AchievementImage({ src, alt }: { src: string; alt: string }) {
+  const [status, setStatus] = useState<ImageStatus>('loading')
+  const size = WIKIMEDIA_IMAGE_WIDTH.GRID_THUMBNAIL
+
+  return (
+    <span className={`achievement-grid__image-wrap achievement-grid__image-wrap--${status}`}>
+      {status !== 'loaded' && <span className="achievement-grid__image-skeleton" aria-hidden="true" />}
+      <img
+        className="achievement-grid__image"
+        src={getWikimediaThumbnailUrl(src, size)}
+        alt={alt}
+        width={size}
+        height={size}
+        loading="lazy"
+        decoding="async"
+        onLoad={() => setStatus('loaded')}
+        onError={() => setStatus('error')}
+      />
+    </span>
+  )
+}
 
 interface AchievementGridProps {
   achievements: AchievementDTO[]
@@ -66,11 +92,7 @@ function AchievementGrid({
                 </svg>
               </span>
             )}
-            <img
-              className="achievement-grid__image"
-              src={achievement.imageUrl}
-              alt={achievement.description}
-            />
+            <AchievementImage src={achievement.imageUrl} alt={achievement.description} />
             <p className="achievement-grid__description">{achievement.description}</p>
           </button>
         )

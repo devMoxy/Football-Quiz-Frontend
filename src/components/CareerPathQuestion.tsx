@@ -1,6 +1,7 @@
 import { Fragment } from 'react'
 import type { CareerPathQuestionDTO } from '../types/quiz'
 import Timer from './Timer'
+import { getWikimediaThumbnailUrl, WIKIMEDIA_IMAGE_WIDTH } from '../utils/wikimediaImage'
 import './QuestionCard.css'
 import './CareerPathQuestion.css'
 
@@ -46,7 +47,14 @@ function CareerPathQuestion({
             <Fragment key={stint.clubOrder}>
               <div className="career-path__stint">
                 <div className="career-path__crest">
-                  <img src={stint.logoUrl} alt={stint.clubName} />
+                  <img
+                    src={getWikimediaThumbnailUrl(stint.logoUrl, WIKIMEDIA_IMAGE_WIDTH.CREST)}
+                    alt={stint.clubName}
+                    width={WIKIMEDIA_IMAGE_WIDTH.CREST}
+                    height={WIKIMEDIA_IMAGE_WIDTH.CREST}
+                    loading="lazy"
+                    decoding="async"
+                  />
                 </div>
                 <span className="career-path__club-name">{stint.clubName}</span>
               </div>

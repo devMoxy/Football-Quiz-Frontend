@@ -1,4 +1,9 @@
 import './Home.css'
+import { getWikimediaThumbnailUrl, WIKIMEDIA_IMAGE_WIDTH } from './utils/wikimediaImage'
+
+// Hero cards render at 220px wide (see .player-card__photo); request 2x for retina.
+const HERO_IMAGE_WIDTH = WIKIMEDIA_IMAGE_WIDTH.HERO
+const HERO_IMAGE_HEIGHT = Math.round((HERO_IMAGE_WIDTH * 4) / 3) // matches aspect-ratio: 3 / 4
 
 type Mode = 'mode1' | 'mode2' | 'mode3'
 
@@ -66,7 +71,16 @@ function Home({ onSelectMode }: HomeProps) {
           >
             <span className="player-card__number">{card.number}</span>
             <div className="player-card__photo">
-              <img className="player-card__img" src={card.photoUrl} alt={card.photoAlt} loading="lazy" />
+              <img
+                className="player-card__img"
+                src={getWikimediaThumbnailUrl(card.photoUrl, HERO_IMAGE_WIDTH)}
+                alt={card.photoAlt}
+                width={HERO_IMAGE_WIDTH}
+                height={HERO_IMAGE_HEIGHT}
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
+              />
             </div>
             <span className="player-card__name">{card.name}</span>
             <span className="player-card__desc">{card.description}</span>

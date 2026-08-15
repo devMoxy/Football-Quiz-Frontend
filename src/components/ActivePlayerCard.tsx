@@ -1,4 +1,5 @@
 import type { PlayerDTO } from '../types/quiz'
+import { getWikimediaThumbnailUrl, WIKIMEDIA_IMAGE_WIDTH } from '../utils/wikimediaImage'
 import './ActivePlayerCard.css'
 
 interface ActivePlayerCardProps {
@@ -11,7 +12,15 @@ function ActivePlayerCard({ player, playersShownCount, totalPlayers }: ActivePla
   return (
     <div className="active-player-card">
       <div className="active-player-card__image-wrap">
-        <img className="active-player-card__image" src={player.imageUrl} alt={player.name} />
+        <img
+          className="active-player-card__image"
+          src={getWikimediaThumbnailUrl(player.imageUrl, WIKIMEDIA_IMAGE_WIDTH.AVATAR)}
+          alt={player.name}
+          width={WIKIMEDIA_IMAGE_WIDTH.AVATAR}
+          height={WIKIMEDIA_IMAGE_WIDTH.AVATAR}
+          loading="lazy"
+          decoding="async"
+        />
       </div>
       <div className="active-player-card__info">
         <p className="active-player-card__counter">

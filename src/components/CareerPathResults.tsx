@@ -2,6 +2,7 @@ import { Fragment } from 'react'
 import type { CareerPathQuestionDTO, CareerPathQuizResultDTO } from '../types/quiz'
 import ResultMessage, { SupplementaryMessage } from './ResultMessage'
 import { ROUND_TIMEOUT_MESSAGES } from './messagePools'
+import { getWikimediaThumbnailUrl, WIKIMEDIA_IMAGE_WIDTH } from '../utils/wikimediaImage'
 import './ResultsSummary.css'
 import './CareerPathQuestion.css'
 
@@ -53,7 +54,14 @@ function CareerPathResults({ results, questions, timedOut, onRestart }: CareerPa
                       <Fragment key={stint.clubOrder}>
                         <div className="career-path__stint">
                           <div className="career-path__crest">
-                            <img src={stint.logoUrl} alt={stint.clubName} />
+                            <img
+                              src={getWikimediaThumbnailUrl(stint.logoUrl, WIKIMEDIA_IMAGE_WIDTH.CREST_COMPACT)}
+                              alt={stint.clubName}
+                              width={WIKIMEDIA_IMAGE_WIDTH.CREST_COMPACT}
+                              height={WIKIMEDIA_IMAGE_WIDTH.CREST_COMPACT}
+                              loading="lazy"
+                              decoding="async"
+                            />
                           </div>
                           <span className="career-path__club-name">{stint.clubName}</span>
                         </div>
