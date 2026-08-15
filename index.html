@@ -7,10 +7,26 @@
     <title>football-quiz-frontend</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!--
+      Loaded non-render-blocking: a plain <link rel="stylesheet"> here would
+      hold up first paint of the whole page until this fetch completes. The
+      media="print" trick makes the browser fetch it at low priority without
+      blocking render, then the onload flips it to screen once it's ready.
+      Fallback fonts (see --sans/--font-* stacks in index.css) render
+      immediately in the meantime and swap once this loads.
+    -->
     <link
       href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap"
       rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
     />
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
   </head>
   <body>
     <div id="root"></div>
