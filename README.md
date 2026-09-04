@@ -21,6 +21,10 @@ Three modes, each its own screen, sharing one design system (a pitch green and c
 
 Mode 3's backup mechanic has a real edge case worth explaining. A player can hold more than one achievement that's on the board at once, so when a backup player is shown to retry a specific box, they can legitimately click a different box they also qualify for instead. If that happens, the original box that actually summoned them would be left permanently unresolved unless something catches it. I ended up tracking which achievement triggered the current backup separately from the normal player queue position, and forcing that specific achievement to resolve (ticked or locked) by the end of that backup's turn no matter which box the guess actually landed on.
 
+The timer in Mode 3 also isn't a simple per player countdown. It's a shared, degrading time budget that only ever goes down on a wrong guess, floors at 6 seconds and stays there, and never resets back up on a correct guess. Getting that to behave correctly meant being careful about stale values inside async callbacks, using refs to mirror state that the interval and the guess handler both needed to read fresh.
+
+The backend runs on Render's free tier, which sleeps after inactivity and can take close to a minute to wake up. That's a bad first impression for anyone actually playing the game, so I set up a cron job that pings the backend periodically to keep it warm instead of letting it idle down.
+
 The timer in Mode 3 also isn't a simple per player countdown. It's a shared, degrading time budget that only ever goes down on a wrong guess, floors at 6 seconds and stays there, and never resets back up on a correct guess. Getting that to behave correctly with real network latency in play (the backend cold starts on its free tier, sometimes taking close to a minute) meant being careful about stale values inside async callbacks, using refs to mirror state that the interval and the guess handler both needed to read fresh.
 
 ## Architecture
